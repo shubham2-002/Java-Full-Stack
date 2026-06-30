@@ -1,6 +1,8 @@
 package com.ecommerce.project.service;
 
 import com.ecommerce.project.Repository.CategoryRepo;
+import com.ecommerce.project.exceptions.APIExcpetion;
+import com.ecommerce.project.exceptions.ResourceNotFoundException;
 import com.ecommerce.project.model.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,21 +16,26 @@ import java.util.Optional;
 @Service   //<<-- Tells spring to manage this compnoent as bean and inject it
 public class CategoryServiceImpl implements CategoryService{
 
-    private List<Category> categories = new ArrayList<>();
-
 
     @Autowired
     private CategoryRepo categoryRepo;
 
     @Override
     public List<Category> getAllCategories() {
-        return  categoryRepo.findAll();
-//        return categories;
+        List<Category> categories = categoryRepo.findAll();
+        if(categories.isEmpty()){
+            throw new APIExcpetion("No Category exists");
+        }
+        return categories;
     }
 
 
     @Override
     public void createCategory(Category category) {
+        Category savedCategory=categoryRepo.findByCategoryName(category.getCategoryName());
+        if(savedCategory!=null){
+            throw new APIExcpetion("Category with name "+category.getCategoryName() +" already exists");
+        }
 //        category.setCategoryId(nextId++);
 //        categories.add(category);
         categoryRepo.save(category);
@@ -39,7 +46,8 @@ public class CategoryServiceImpl implements CategoryService{
 //        List<Category> categories=categoryRepo.findAll();
         Optional<Category> deleteCategoyOptional=categoryRepo.findById(categoryId);
 
-        Category deleteCategory=deleteCategoyOptional.orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Category not found"));
+//        Category deleteCategory=deleteCategoyOptional.orElseThrow(()->new ResponseStatusException(HttpStatus.NOT_FOUND,"Category not found"));
+        Category deleteCategory=deleteCategoyOptional.orElseThrow(()->new ResourceNotFoundException("Category","CategoryID",categoryId));
 
 //        categories.remove(category);
         categoryRepo.delete(deleteCategory);
@@ -49,15 +57,12 @@ public class CategoryServiceImpl implements CategoryService{
 
     @Override
     public Category updateCategory(Category category, Long categoryId) {
-        Optional<Category> savedCategoyOptional=categoryRepo.findById(categoryId);
-
-        Category savedCategory = savedCategoyOptional.orElseThrow(()->
-                                    new ResponseStatusException
-                                            (HttpStatus.NOT_FOUND,"Resource Not Found"));
+        Category  savedCategoy=categoryRepo.findById(categoryId).orElseThrow
+                (()->new ResourceNotFoundException("Category","CategoryID",categoryId));
 
         category.setCategoryId(categoryId);
-        savedCategory = categoryRepo.save(category);
-        return savedCategory;
+        savedCategoy = categoryRepo.save(category);
+        return savedCategoy;
 
         //Updation part
 
