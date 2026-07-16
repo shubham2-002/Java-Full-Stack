@@ -1,10 +1,7 @@
 package com.ecommerce.project.model;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import jdk.jfr.Enabled;
@@ -12,6 +9,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Entity(name = "categories")// tell taht this class is now enity in database  or table in database
 @Data  // lombok
@@ -26,5 +25,8 @@ public class Category {
     @NotBlank
     @Size(min = 5,message = "Category Name must be least 5 Character")
     private String categoryName;
+
+    @OneToMany(mappedBy = "category" ,cascade = CascadeType.ALL)
+    private List<Product> products;
 
 }
